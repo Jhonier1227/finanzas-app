@@ -29,6 +29,7 @@ export function ExpenseForm({ open, onOpenChange, expense }: ExpenseFormProps) {
   const isEditing = !!expense;
 
   const form = useForm<ExpenseFormData>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- incompatibilidad conocida de tipos RHF + Zod 4 (ver AGENTS.md)
     resolver: zodResolver(expenseSchema) as any,
     defaultValues: {
       category: undefined as unknown as ExpenseFormData["category"],
@@ -52,21 +53,25 @@ export function ExpenseForm({ open, onOpenChange, expense }: ExpenseFormProps) {
       });
     } else {
       form.reset({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- placeholder vacío para select no elegido (ver AGENTS.md)
         category: undefined as any,
         productName: "",
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- placeholder vacío (ver AGENTS.md)
         description: "" as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- placeholder vacío para input numérico (ver AGENTS.md)
         price: undefined as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- placeholder vacío para radio no elegido (ver AGENTS.md)
         type: undefined as any,
         date: new Date().toISOString().slice(0, 10),
       } as ExpenseFormData);
     }
   }, [expense, open, form]);
 
-  const onSubmit = (data: ExpenseFormData) => {
+  const onSubmit = async (data: ExpenseFormData) => {
     if (isEditing && expense) {
-      updateExpense(expense.id, data);
+      await updateExpense(expense.id, data);
     } else {
-      addExpense(data);
+      await addExpense(data);
     }
     onOpenChange(false);
   };

@@ -2,8 +2,16 @@
 
 import { useMemo } from "react";
 import { useFinanceStore } from "@/store/finance-store";
-import { EXPENSE_CATEGORIES, type ExpenseCategory } from "@/types";
+import { type ExpenseCategory } from "@/types";
 import { formatCurrency } from "@/lib/utils";
+import {
+  totalRealizado,
+  totalPlanificado,
+  saldoDisponible,
+  porcentajeGasto,
+  totalesPorCategoria,
+  totalesPorCategoriaYTipo,
+} from "@/lib/calculations";
 import {
   PieChart,
   Pie,
@@ -81,59 +89,30 @@ export function Dashboard() {
   const income = useFinanceStore((s) => s.income);
   const expenses = useFinanceStore((s) => s.expenses);
 
-  const totalRealizado = useMemo(
-    () =>
-      expenses
-        .filter((e) => e.type === "realizado")
-        .reduce((sum, e) => sum + e.price, 0),
+  const totalRealizadoMes = useMemo(() => totalRealizado(expenses), [expenses]);
+
+  const totalPlanificadoMes = useMemo(
+    () => totalPlanificado(expenses),
     [expenses]
   );
 
-  const totalPlanificado = useMemo(
-    () =>
-      expenses
-        .filter((e) => e.type === "planificado")
-        .reduce((sum, e) => sum + e.price, 0),
-    [expenses]
+  const disponible = saldoDisponible(
+    income,
+    totalRealizadoMes,
+    totalPlanificadoMes
   );
-
-  const disponible = income - totalRealizado - totalPlanificado;
 
   const pieData = useMemo(() => {
-    const categoryTotals: Record<string, number> = {};
-    EXPENSE_CATEGORIES.forEach((c) => {
-      categoryTotals[c] = 0;
-    });
-    expenses
-      .filter((e) => e.type === "realizado")
-      .forEach((e) => {
-        categoryTotals[e.category] = (categoryTotals[e.category] || 0) + e.price;
-      });
-    return EXPENSE_CATEGORIES.filter(
-      (c) => categoryTotals[c] > 0
-    ).map((c) => ({
-      name: c,
-      value: categoryTotals[c],
-    }));
+    const totals = totalesPorCategoria(expenses, "realizado");
+    return Object.entries(totals)
+      .filter(([, value]) => (value ?? 0) > 0)
+      .map(([name, value]) => ({ name, value: value ?? 0 }));
   }, [expenses]);
 
   const barData = useMemo(() => {
-    const categoryTotals: Record<string, { realizado: number; planificado: number }> = {};
-    EXPENSE_CATEGORIES.forEach((c) => {
-      categoryTotals[c] = { realizado: 0, planificado: 0 };
-    });
-    expenses.forEach((e) => {
-      if (!categoryTotals[e.category]) {
-        categoryTotals[e.category] = { realizado: 0, planificado: 0 };
-      }
-      if (e.type === "realizado") {
-        categoryTotals[e.category].realizado += e.price;
-      } else {
-        categoryTotals[e.category].planificado += e.price;
-      }
-    });
-    return Object.entries(categoryTotals)
-      .filter(([_, v]) => v.realizado > 0 || v.planificado > 0)
+    const totals = totalesPorCategoriaYTipo(expenses);
+    return Object.entries(totals)
+      .filter(([, v]) => v.realizado > 0 || v.planificado > 0)
       .map(([name, v]) => ({
         name,
         realizado: v.realizado,
@@ -141,7 +120,7 @@ export function Dashboard() {
       }));
   }, [expenses]);
 
-  const gastoPct = income > 0 ? (totalRealizado / income) * 100 : 0;
+  const gastoPct = porcentajeGasto(totalRealizadoMes, income);
 
   if (income === 0) {
     return (
@@ -183,7 +162,7 @@ export function Dashboard() {
                 Total Gastado
               </p>
               <p className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
-                {formatCurrency(totalRealizado)}
+                {formatCurrency(totalRealizadoMes)}
               </p>
             </div>
           </div>
@@ -199,7 +178,7 @@ export function Dashboard() {
                 Comprometido (Planificado)
               </p>
               <p className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
-                {formatCurrency(totalPlanificado)}
+                {formatCurrency(totalPlanificadoMes)}
               </p>
             </div>
           </div>
@@ -308,6 +287,7 @@ export function Dashboard() {
                     ))}
                   </Pie>
                   <Tooltip
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- formatter de recharts (TValue genérico)
                     formatter={(value: any) => formatCurrency(value as number)}
                     contentStyle={{
                       borderRadius: "0.75rem",
@@ -362,6 +342,7 @@ export function Dashboard() {
                     }
                   />
                   <Tooltip
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- formatter de recharts (TValue genérico)
                     formatter={(value: any) => formatCurrency(value as number)}
                     contentStyle={{
                       borderRadius: "0.75rem",
@@ -369,6 +350,7 @@ export function Dashboard() {
                     }}
                   />
                   <Legend
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- formatter de recharts (TValue genérico)
                     formatter={(value: any) =>
                       value === "realizado" ? "Realizado" : "Planificado"
                     }

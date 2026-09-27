@@ -16,12 +16,12 @@ export function IncomeForm() {
   const [editing, setEditing] = useState(false);
 
   const form = useForm<IncomeFormData>({
-    resolver: zodResolver(incomeSchema) as any,
+    resolver: zodResolver(incomeSchema) as any, // eslint-disable-line @typescript-eslint/no-explicit-any -- incompatibilidad conocida de tipos RHF + Zod 4 (ver AGENTS.md)
     defaultValues: { income: income || undefined },
   });
 
-  const onSubmit = (data: IncomeFormData) => {
-    setIncome(data.income);
+  const onSubmit = async (data: IncomeFormData) => {
+    await setIncome(data.income);
     setEditing(false);
   };
 

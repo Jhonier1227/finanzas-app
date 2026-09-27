@@ -1,0 +1,64 @@
+// Finanzas App — modelo de datos (ver docs/MODELO-DATOS.md)
+// Convenciones:
+// - Montos en Int (COP sin decimales)
+// - date como String "YYYY-MM-DD" (día calendario, sin zona horaria)
+// - Tipos de gasto como String validado por Zod ("realizado" | "planificado"; SQLite no soporta enums)
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String
+  createdAt    DateTime  @default(now())
+  sessions     Session[]
+  salaries     Salary[]
+  expenses     Expense[]
+}
+
+model Session {
+  id        String   @id
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Salary {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  year      Int
+  month     Int // 1-12
+  amount    Int // COP, > 0
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, year, month])
+}
+
+model Expense {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category    String // una de las 10 categorías de src/types/index.ts
+  productName String
+  description String   @default("")
+  price       Int // COP, > 0
+  type        String // "realizado" | "planificado"
+  date        String // "YYYY-MM-DD" — define el mes del gasto
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId, date])
+}

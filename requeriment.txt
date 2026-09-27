@@ -1,0 +1,84 @@
+============================================================
+  FINANZAS APP — REQUISITOS DE INSTALACIÓN (desarrollo)
+============================================================
+
+Lee primero: PROYECTO.md (arquitectura completa) y
+docs/REQUERIMIENTOS.md (requerimientos funcionales).
+
+------------------------------------------------------------
+1. QUÉ INSTALAR (obligatorio)
+------------------------------------------------------------
+
+  ✔ Node.js LTS 22.x        -> https://nodejs.org
+       (mínimo soportado: 20.9 — lo exige Next.js 16)
+       Verificar:  node -v
+
+  ✔ Git                     -> https://git-scm.com
+       Verificar:  git --version
+
+  No hace falta instalar NADA más:
+  - La base de datos es SQLite (un archivo, incluida).
+  - Todo lo demás se instala con "npm install".
+
+------------------------------------------------------------
+2. PREPARAR EL PROYECTO
+------------------------------------------------------------
+
+  1) git clone <url-del-repo>
+  2) cd finanzas-app
+  3) npm install
+
+  4) Crear el archivo  .env  en la raíz con esta línea:
+
+        DATABASE_URL="file:./dev.db"
+
+  5) Crear la base de datos y cargar el usuario demo:
+
+        npx prisma migrate dev
+        npx prisma db seed
+
+  6) Arrancar:
+
+        npm run dev
+
+  7) Abrir http://localhost:3000
+
+------------------------------------------------------------
+3. COMANDOS DEL DÍA A DÍA
+------------------------------------------------------------
+
+  npm run dev        -> servidor de desarrollo
+  npm run build      -> build de producción
+  npm run lint       -> verificación (ESLint; debe quedar limpio)
+  npx tsc --noEmit   -> verificar tipos TypeScript
+
+  Base de datos:
+
+  npx prisma migrate dev --name <nombre>   -> nueva migración
+  npx prisma migrate status                -> estado
+  npx prisma studio                        -> explorador visual de la BD
+  npx prisma db seed                       -> sembrar usuario demo
+
+------------------------------------------------------------
+4. REGLAS IMPORTANTES ANTES DE TOCAR CÓDIGO
+------------------------------------------------------------
+
+  ✦ UI siempre en español y montos en COP (formato es-CO).
+  ✦ Prisma fijado en 6.x: NO actualizar prisma/@prisma/client.
+  ✦ Next.js 16 tiene breaking changes: leer
+    node_modules/next/dist/docs/ antes de usar APIs de Next.
+    (cookies(), params, searchParams son ASYNC; el archivo
+     middleware.ts ahora se llama proxy.ts).
+  ✦ No borrar el localStorage del usuario (clave
+    "finanzas-app-storage"): contiene datos reales que se
+    importarán a la BD en la Fase 3.
+  ✦ Antes de entregar: npm run lint + npm run build limpios
+    y marcar tareas hechas en TAREAS.md.
+
+------------------------------------------------------------
+5. OPCIONAL (producción en el PC viejo — solo despliegue)
+------------------------------------------------------------
+
+  Ver docs/ENTORNOS.md. Resumen: Debian 13 headless, Node 22,
+  Tailscale, systemd. El servidor NUNCA compila; el build se
+  hace en el PC de desarrollo y se copia.

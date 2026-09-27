@@ -2,12 +2,12 @@
 
 import { useState, useMemo } from "react";
 import { useFinanceStore } from "@/store/finance-store";
-import type { Expense, ExpenseCategory, ExpenseType } from "@/types";
+import type { Expense, ExpenseType } from "@/types";
 import { EXPENSE_CATEGORIES } from "@/types";
-import { Input, Select } from "@/components/ui/input";
+import { Select } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { Pencil, Trash2, Search, Filter, Plus } from "lucide-react";
+import { Pencil, Trash2, Search, Plus } from "lucide-react";
 import { ExpenseForm } from "./expense-form";
 import {
   AlertDialog,
@@ -289,7 +289,7 @@ export function ExpenseList() {
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                if (deleteTarget) deleteExpense(deleteTarget.id);
+                if (deleteTarget) void deleteExpense(deleteTarget.id);
                 setDeleteTarget(null);
               }}
             >
