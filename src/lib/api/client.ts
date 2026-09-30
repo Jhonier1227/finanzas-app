@@ -30,6 +30,25 @@ export interface ImportResult {
   salaryRegistered: boolean;
 }
 
+export interface ProfileDto {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+}
+
+export interface HousingConfigDto {
+  propertyValue: number;
+  updatedAt: string;
+}
+
+export interface HousingPaymentDto {
+  id: string;
+  date: string;
+  amount: number;
+  note: string;
+}
+
 async function request<T>(
   path: string,
   options: RequestInit = {}
@@ -95,6 +114,19 @@ export const salariesApi = {
     }),
 };
 
+export const profileApi = {
+  /** Perfil del usuario actual (correo + nombre y apellido). */
+  me: () => request<ProfileDto>("/api/auth/me"),
+  update: (data: { firstName?: string; lastName?: string }) =>
+    request<ProfileDto>("/api/auth/me", {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+  /** Elimina la cuenta y todos sus datos (irreversible). */
+  remove: () =>
+    request<{ ok: true }>("/api/auth/me", { method: "DELETE" }),
+};
+
 export const importApi = {
   /** Importa una sola vez los datos guardados en localStorage (RF-24). */
   send: (data: { income?: number; expenses?: ExpenseFormData[] }) =>
@@ -102,4 +134,27 @@ export const importApi = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+};
+
+export const housingApi = {
+  /** Valor del inmueble (null si aún no se configuró). */
+  getConfig: () => request<HousingConfigDto | null>("/api/housing/config"),
+  saveConfig: (propertyValue: number) =>
+    request<HousingConfigDto>("/api/housing/config", {
+      method: "PUT",
+      body: JSON.stringify({ propertyValue }),
+    }),
+  list: () => request<HousingPaymentDto[]>("/api/housing/payments"),
+  create: (data: { date: string; amount: number; note?: string }) =>
+    request<HousingPaymentDto>("/api/housing/payments", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  update: (id: string, data: Partial<{ date: string; amount: number; note: string }>) =>
+    request<HousingPaymentDto>(`/api/housing/payments/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+  remove: (id: string) =>
+    request<void>(`/api/housing/payments/${id}`, { method: "DELETE" }),
 };

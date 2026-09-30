@@ -351,9 +351,15 @@ export function Dashboard() {
                   />
                   <Legend
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- formatter de recharts (TValue genérico)
-                    formatter={(value: any) =>
-                      value === "realizado" ? "Realizado" : "Planificado"
-                    }
+                    formatter={(value: any) => {
+                      // Recharts entrega el `name` de la barra ("Realizado" /
+                      // "Planificado" con mayúscula); comparar insensible a
+                      // mayúsculas para no etiquetar ambas como "Planificado".
+                      const label = String(value ?? "");
+                      return label.toLowerCase() === "realizado"
+                        ? "Realizado"
+                        : "Planificado";
+                    }}
                   />
                   <Bar
                     dataKey="realizado"

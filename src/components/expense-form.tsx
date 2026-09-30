@@ -1,10 +1,11 @@
 "use client";
 
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { expenseSchema, type ExpenseFormData } from "@/lib/validations";
 import { useFinanceStore } from "@/store/finance-store";
 import { Input, Select } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
@@ -15,7 +16,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { EXPENSE_CATEGORIES, type Expense } from "@/types";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { expensesApi } from "@/lib/api/client";
+import { formatCurrency } from "@/lib/utils";
 
 interface ExpenseFormProps {
   open: boolean;
@@ -29,6 +32,9 @@ export function ExpenseForm({ open, onOpenChange, expense }: ExpenseFormProps) {
   const ctxYear = useFinanceStore((s) => s.year);
   const ctxMonth = useFinanceStore((s) => s.month);
   const isEditing = !!expense;
+  /** Historial de gastos anteriores (únicos por nombre, el más reciente primero). */
+  const [history, setHistory] = useState<Expense[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   // Fecha por defecto: hoy si el contexto es el mes actual; si navegaste a
   // otro mes, el día 1 de ese mes (evita gastos "invisibles" en la lista).
@@ -80,6 +86,55 @@ export function ExpenseForm({ open, onOpenChange, expense }: ExpenseFormProps) {
     }
   }, [expense, open, form]); // eslint-disable-line react-hooks/exhaustive-deps -- defaultDate deriva del contexto de mes del store
 
+  const productNameValue =
+    useWatch({ control: form.control, name: "productName" }) ?? "";
+
+  // Al abrir el diálogo para un gasto nuevo, traer todo el historial para
+  // sugerir gastos repetidos (arriendo, servicios...): un clic rellena el
+  // formulario y solo se ajustan los valores que cambiaron.
+  useEffect(() => {
+    if (!open || expense) return;
+    let cancelled = false;
+    expensesApi
+      .list()
+      .then((all) => {
+        if (cancelled) return;
+        const seen = new Set<string>();
+        const unique = all.filter((e) => {
+          const key = e.productName.trim().toLowerCase();
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+        setHistory(unique.slice(0, 100));
+      })
+      .catch(() => {
+        if (!cancelled) setHistory([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, expense]);
+
+  const suggestions =
+    !isEditing && productNameValue.trim().length > 0
+      ? history
+          .filter((h) =>
+            h.productName.toLowerCase().includes(productNameValue.trim().toLowerCase())
+          )
+          .slice(0, 6)
+      : [];
+
+  /** Rellena el formulario con un gasto anterior; el precio queda como punto de partida editable. */
+  const applySuggestion = (s: Expense) => {
+    form.setValue("productName", s.productName);
+    form.setValue("category", s.category);
+    form.setValue("description", s.description ?? "");
+    form.setValue("price", s.price);
+    form.setValue("type", s.type);
+    setShowSuggestions(false);
+  };
+
   const onSubmit = async (data: ExpenseFormData) => {
     if (isEditing && expense) {
       await updateExpense(expense.id, data);
@@ -114,13 +169,44 @@ export function ExpenseForm({ open, onOpenChange, expense }: ExpenseFormProps) {
             )}
           />
 
-          <Input
-            id="productName"
-            label="Nombre del producto/servicio"
-            placeholder="Ej: Mercado, Netflix, Gasolina..."
-            {...form.register("productName")}
-            error={form.formState.errors.productName?.message}
-          />
+          <div className="relative">
+            <Input
+              id="productName"
+              label="Nombre del producto/servicio"
+              placeholder="Ej: Mercado, Netflix, Gasolina..."
+              autoComplete="off"
+              {...form.register("productName")}
+              onFocus={() => setShowSuggestions(true)}
+              onBlur={() => setShowSuggestions(false)}
+              error={form.formState.errors.productName?.message}
+            />
+            {showSuggestions && suggestions.length > 0 && (
+              <ul className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
+                {suggestions.map((s) => (
+                  <li key={s.id}>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => applySuggestion(s)}
+                      className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-zinc-100 dark:hover:bg-zinc-700 cursor-pointer"
+                    >
+                      <span className="min-w-0">
+                        <span className="block truncate font-medium text-zinc-900 dark:text-zinc-100">
+                          {s.productName}
+                        </span>
+                        <span className="block truncate text-xs text-zinc-500 dark:text-zinc-400">
+                          {s.category}
+                        </span>
+                      </span>
+                      <span className="shrink-0 text-xs font-medium text-zinc-600 dark:text-zinc-300">
+                        {formatCurrency(s.price)}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
 
           <div className="space-y-1.5">
             <label
@@ -138,13 +224,20 @@ export function ExpenseForm({ open, onOpenChange, expense }: ExpenseFormProps) {
             />
           </div>
 
-          <Input
-            id="price"
-            type="number"
-            label="Precio (COP)"
-            placeholder="150000"
-            {...form.register("price", { valueAsNumber: true })}
-            error={form.formState.errors.price?.message}
+          <Controller
+            control={form.control}
+            name="price"
+            render={({ field }) => (
+              <CurrencyInput
+                id="price"
+                label="Precio (COP)"
+                placeholder="150.000"
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                error={form.formState.errors.price?.message}
+              />
+            )}
           />
 
           <div className="space-y-2">

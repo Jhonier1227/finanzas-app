@@ -15,6 +15,8 @@ erDiagram
         string id PK "uuid"
         string email UK "único, minúsculas"
         string passwordHash "bcrypt/argon2"
+        string? firstName "nombre (perfil, N6)"
+        string? lastName "apellido (perfil, N6)"
         datetime createdAt
     }
 

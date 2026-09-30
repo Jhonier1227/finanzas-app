@@ -85,3 +85,24 @@ export function gastosDelMes(
   const prefix = `${year}-${String(month).padStart(2, "0")}`;
   return expenses.filter((e) => e.date.startsWith(prefix));
 }
+
+// --- Módulo Vivienda VIS (pagos libres hacia el inmueble propio) ---
+
+export interface HousingPaymentLike {
+  amount: number;
+}
+
+/** Total personal acumulado: Σ de todos los pagos registrados. */
+export function totalPagadoVivienda(payments: HousingPaymentLike[]): number {
+  return payments.reduce((sum, p) => sum + p.amount, 0);
+}
+
+/** Saldo restante = valor del inmueble − total pagado. Puede ser negativo (se pagó de más). */
+export function restanteVivienda(propertyValue: number, totalPagado: number): number {
+  return propertyValue - totalPagado;
+}
+
+/** % del inmueble ya pagado (0-100+, sin tope para ver sobrepagos). */
+export function porcentajeVivienda(totalPagado: number, propertyValue: number): number {
+  return propertyValue > 0 ? (totalPagado / propertyValue) * 100 : 0;
+}

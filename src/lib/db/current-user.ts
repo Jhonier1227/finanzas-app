@@ -13,12 +13,20 @@ export async function getCurrentUserId(): Promise<string | null> {
 export async function getCurrentUser(): Promise<{
   id: string;
   email: string;
+  firstName: string | null;
+  lastName: string | null;
   createdAt: Date;
 } | null> {
   const userId = await getSessionUserId();
   if (!userId) return null;
   return prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, email: true, createdAt: true },
+    select: {
+      id: true,
+      email: true,
+      firstName: true,
+      lastName: true,
+      createdAt: true,
+    },
   });
 }

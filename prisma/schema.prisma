@@ -18,10 +18,14 @@ model User {
   id           String    @id @default(uuid())
   email        String    @unique
   passwordHash String
+  firstName    String? // nombre (lo registra el usuario en su perfil)
+  lastName     String? // apellido (lo registra el usuario en su perfil)
   createdAt    DateTime  @default(now())
   sessions     Session[]
   salaries     Salary[]
   expenses     Expense[]
+  housingConfig HousingConfig?
+  housingPayments HousingPayment[]
 }
 
 model Session {
@@ -59,6 +63,30 @@ model Expense {
   date        String // "YYYY-MM-DD" — define el mes del gasto
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([userId, date])
+}
+
+// --- Módulo Vivienda VIS: valor del inmueble + pagos libres (sin cuota fija) ---
+
+model HousingConfig {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyValue Int // valor actual del inmueble en COP (editable)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model HousingPayment {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      String // "YYYY-MM-DD" (admite fechas pasadas: saldo inicial)
+  amount    Int // COP, > 0
+  note      String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId, date])
 }

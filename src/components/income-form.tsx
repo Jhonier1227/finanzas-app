@@ -1,10 +1,10 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { incomeSchema, type IncomeFormData } from "@/lib/validations";
 import { useFinanceStore } from "@/store/finance-store";
-import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Button } from "@/components/ui/button";
 import { Pencil, Save, X } from "lucide-react";
 import { useState } from "react";
@@ -55,13 +55,20 @@ export function IncomeForm() {
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="flex items-end gap-2">
       <div className="flex-1">
-        <Input
-          id="income"
-          type="number"
-          label="Ingreso Mensual (COP)"
-          placeholder="Ej: 2000000"
-          {...form.register("income", { valueAsNumber: true })}
-          error={form.formState.errors.income?.message}
+        <Controller
+          control={form.control}
+          name="income"
+          render={({ field }) => (
+            <CurrencyInput
+              id="income"
+              label="Ingreso Mensual (COP)"
+              placeholder="Ej: 2.000.000"
+              value={field.value}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              error={form.formState.errors.income?.message}
+            />
+          )}
         />
       </div>
       <div className="flex gap-1">

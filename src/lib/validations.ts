@@ -60,3 +60,65 @@ export type RegisterFormData = z.infer<typeof registerSchema>;
 export const loginSchema = registerSchema;
 
 export type LoginFormData = z.infer<typeof loginSchema>;
+
+/**
+ * Recuperación de contraseña con código de verificación (uso personal).
+ * El código vive en la variable de entorno RECOVERY_CODE (nunca en git);
+ * el servidor lo compara y, si coincide, fija la contraseña nueva.
+ */
+export const recoverSchema = z.object({
+  email: z.email("Correo inválido").trim().toLowerCase(),
+  code: z.string().trim().min(1, "El código de verificación es obligatorio"),
+  newPassword: z
+    .string()
+    .min(8, "Mínimo 8 caracteres")
+    .max(72, "Máximo 72 caracteres"),
+});
+
+export type RecoverFormData = z.infer<typeof recoverSchema>;
+
+/**
+ * Perfil del usuario (N6): nombre y apellido opcionales que se registran
+ * dentro de la plataforma, después de crear la cuenta. Se usa en
+ * PATCH /api/auth/me (sin defaults: solo actualiza lo enviado).
+ */
+export const profileSchema = z.object({
+  firstName: z
+    .string()
+    .trim()
+    .max(60, "Máximo 60 caracteres")
+    .optional(),
+  lastName: z
+    .string()
+    .trim()
+    .max(60, "Máximo 60 caracteres")
+    .optional(),
+});
+
+export type ProfileFormData = z.infer<typeof profileSchema>;
+
+/** Valor del inmueble (módulo Vivienda VIS): único por usuario, editable. */
+export const housingConfigSchema = z.object({
+  propertyValue: z.coerce
+    .number()
+    .int()
+    .min(1, "El valor del inmueble debe ser mayor a 0"),
+});
+
+export type HousingConfigFormData = z.infer<typeof housingConfigSchema>;
+
+const housingPaymentBase = z.object({
+  date: dateStringSchema,
+  amount: z.coerce.number().int().min(1, "El valor debe ser mayor a 0"),
+  note: z.string().trim().max(200, "Máximo 200 caracteres").optional(),
+});
+
+/** Creación de pago: nota por defecto "". */
+export const housingPaymentSchema = housingPaymentBase.extend({
+  note: z.string().trim().max(200, "Máximo 200 caracteres").optional().default(""),
+});
+
+/** PATCH: sin defaults — solo se actualizan los campos enviados. */
+export const housingPaymentPatchSchema = housingPaymentBase.partial();
+
+export type HousingPaymentFormData = z.infer<typeof housingPaymentSchema>;

@@ -106,6 +106,27 @@
 
 ---
 
+## Novedades (2026-09-28) ✅ — verificadas con `lint` + `build` limpios y endpoint probado en vivo
+
+- [x] N1 Formato de miles al digitar (1.000, 10.000): nuevo `src/components/ui/currency-input.tsx`, usado en sueldo (`income-form`) y precio del gasto (`expense-form`)
+- [x] N2 Confirmación "Gasto agregado correctamente": `src/lib/notify.ts` + `<Toaster/>` en `layout.tsx`; avisa en crear/editar/eliminar/marcar realizado y guardar sueldo
+- [x] N3 Bug leyenda dashboard (ambas barras decían "Planificado"): causa = el formatter comparaba `"realizado"` en minúsculas pero Recharts entrega el `name` ("Realizado"); corregido con comparación insensible a mayúsculas
+- [x] N4 Sugerencias de gastos repetidos al escribir el nombre: trae el historial (`GET /api/expenses` sin filtros), un clic rellena categoría/descripción/tipo/precio y solo se ajusta lo que cambió
+- [x] N5 Recuperación de contraseña con código: `POST /api/auth/recover` (email + código + nueva; revoca todas las sesiones) + enlace "¿Olvidaste tu contraseña?" en `/login`. El código vive en `RECOVERY_CODE` del `.env` (nunca en git); documentado en `docs/ENTORNOS.md` y `deploy/DEPLOY.md`. ⚠️ Al desplegar, copiar también esa línea al `.env` del servidor
+- [x] N6 Perfil del usuario: `firstName`/`lastName` opcionales en `User` (migración `user-profile`), `GET/PATCH /api/auth/me`, diálogo "Mi perfil" en la cabecera (muestra el correo, edita nombre y apellido, avisa "Perfil actualizado correctamente"). En el servidor se aplica con `migrate deploy` (DEPLOY.md §B.2)
+- [x] N7 Eliminar cuenta: `DELETE /api/auth/me` (borra usuario + gastos + sueldos en cascada y limpia la cookie) + "Zona de peligro" en el perfil en 3 pasos (N7b): aviso con casilla tras 10 s → prueba matemática → confirmación final "¿Estás seguro?" ("Sí, eliminar definitivamente" / "No estoy seguro, cancelar"); Cancelar en todos los pasos; al eliminar sale a `/login`. Sin migración nueva (usa el schema actual)
+- [x] N8 Input de moneda: borrado corregido — conserva el cursor al reformatear, borrar un punto separador borra el dígito anterior y se puede vaciar el campo por completo (`currency-input.tsx`: formato con control de cursor, máx. 12 dígitos). N8b: el vaciado emitía `undefined` y React Hook Form lo descartaba restaurando el valor anterior ("se rellenaba solo"); ahora emite `null`, que sí persiste (verificado con test de componente real + RHF)
+
+## Fase 8 — Módulo Vivienda VIS ✅ (2026-09-30)
+
+> Objetivo: llevar el acumulado personal pagado hacia el inmueble propio, aparte del dashboard mensual.
+
+- [x] T8.1 Prisma: `HousingConfig` (valor del inmueble, único por usuario) + `HousingPayment` (fecha, valor, nota) — migración `housing`
+- [x] T8.2 API `GET/PUT /api/housing/config` + `GET/POST /api/housing/payments` + `PATCH/DELETE /api/housing/payments/[id]` (todo filtrado por `userId`, validación Zod)
+- [x] T8.3 Cálculos en `lib/calculations.ts`: total pagado, restante, % de avance
+- [x] T8.4 Pestaña "Vivienda": valor editable (CurrencyInput), tarjetas pagado/restante/avance + barra, tabla de pagos con crear/editar/eliminar y avisos; admite fechas pasadas (saldo inicial)
+- [x] T8.5 Verificación: `lint` + `tsc` + `build` limpios; rutas probadas en vivo (401 sin sesión, sin 500)
+
 ## Regla de cierre de fase
 
 1. `npm run lint` y `npm run build` (o `npx tsc --noEmit` si se tocaron tipos) → limpios.

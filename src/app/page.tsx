@@ -5,23 +5,30 @@ import { IncomeForm } from "@/components/income-form";
 import { Dashboard } from "@/components/dashboard";
 import { ExpenseList } from "@/components/expense-list";
 import { Historial } from "@/components/historial";
+import { Vivienda } from "@/components/vivienda";
 import { MonthSelector } from "@/components/month-selector";
 import { DarkModeToggle } from "@/components/dark-mode-toggle";
 import { ImportLocalData } from "@/components/import-local-data";
+import { ProfileDialog } from "@/components/profile-dialog";
 import { useFinanceStore } from "@/store/finance-store";
+import { profileApi, type ProfileDto } from "@/lib/api/client";
 import { formatCurrency } from "@/lib/utils";
 import {
   History,
+  House,
   LayoutDashboard,
   ListFilter,
   LogOut,
+  UserRound,
   Wallet,
 } from "lucide-react";
 
-type Tab = "dashboard" | "gastos" | "historial";
+type Tab = "dashboard" | "gastos" | "historial" | "vivienda";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [profile, setProfile] = useState<ProfileDto | null>(null);
   const income = useFinanceStore((s) => s.income);
   const loading = useFinanceStore((s) => s.loading);
   const error = useFinanceStore((s) => s.error);
@@ -31,6 +38,12 @@ export default function Home() {
   useEffect(() => {
     void loadMonth();
   }, [loadMonth]);
+
+  // N6: perfil de la sesión (correo + nombre/apellido). Si la sesión venció,
+  // el cliente API redirige a /login (401), así que aquí basta ignorar el error.
+  useEffect(() => {
+    profileApi.me().then(setProfile).catch(() => {});
+  }, []);
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -94,9 +107,32 @@ export default function Home() {
                 <History className="h-4 w-4" />
                 <span className="hidden sm:inline">Historial</span>
               </button>
+              <button
+                onClick={() => setActiveTab("vivienda")}
+                className={`flex items-center gap-2 rounded-lg px-2.5 sm:px-4 py-2 text-sm font-medium transition-colors cursor-pointer ${
+                  activeTab === "vivienda"
+                    ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                    : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                }`}
+              >
+                <House className="h-4 w-4" />
+                <span className="hidden sm:inline">Vivienda</span>
+              </button>
               <div className="ml-1 sm:ml-2 border-l border-zinc-200 pl-1 sm:pl-2 dark:border-zinc-700">
                 <DarkModeToggle />
               </div>
+              <button
+                onClick={() => setProfileOpen(true)}
+                title={profile?.email ?? "Mi perfil"}
+                className="flex items-center gap-2 rounded-lg px-2 sm:px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 transition-colors cursor-pointer dark:text-zinc-400 dark:hover:bg-zinc-800"
+              >
+                <UserRound className="h-4 w-4" />
+                {profile?.firstName && (
+                  <span className="hidden sm:inline max-w-[100px] truncate">
+                    {profile.firstName}
+                  </span>
+                )}
+              </button>
               <button
                 onClick={handleLogout}
                 title="Cerrar sesión"
@@ -133,16 +169,16 @@ export default function Home() {
           </div>
         ) : (
           <>
-            {/* Selector de mes (RF-15) — no aplica a la pestaña Historial,
-                que tiene su propio selector de año */}
-            {activeTab !== "historial" && (
+            {/* Selector de mes (RF-15) — no aplica a Historial (selector de
+                año propio) ni a Vivienda (acumulado total, sin meses) */}
+            {activeTab !== "historial" && activeTab !== "vivienda" && (
               <div className="flex justify-center sm:justify-start">
                 <MonthSelector />
               </div>
             )}
 
             {/* Income: solo en meses con dashboard/gastos */}
-            {activeTab !== "historial" && (
+            {activeTab !== "historial" && activeTab !== "vivienda" && (
               <div className="max-w-md">
                 <IncomeForm />
               </div>
@@ -153,6 +189,8 @@ export default function Home() {
               <Dashboard />
             ) : activeTab === "gastos" ? (
               <ExpenseList />
+            ) : activeTab === "vivienda" ? (
+              <Vivienda />
             ) : (
               <Historial />
             )}
@@ -164,6 +202,13 @@ export default function Home() {
       <footer className="mt-auto border-t border-zinc-200 py-4 text-center text-xs text-zinc-400 dark:border-zinc-800 dark:text-zinc-500">
         Finanzas App &mdash; Control de gastos personales
       </footer>
+
+      <ProfileDialog
+        open={profileOpen}
+        onOpenChange={setProfileOpen}
+        profile={profile}
+        onUpdated={setProfile}
+      />
     </div>
   );
 }

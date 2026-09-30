@@ -124,6 +124,7 @@ está en **`deploy/DEPLOY.md`**. Logs: `journalctl -u finanzas -f`.
 ```
 DATABASE_URL="file:./dev.db"       # SQLite; en producción apunta al archivo real
 AUTH_SECRET="<cadena aleatoria>"   # firmar/verificar sesiones (openssl rand -base64 32)
+RECOVERY_CODE="<código personal>"  # recuperar la contraseña (POST /api/auth/recover); nunca va a git
 ```
 
 Ambos archivos están en `.gitignore`; nunca se suben a git.

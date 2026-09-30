@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { Expense } from "@/types";
 import type { ExpenseFormData } from "@/lib/validations";
 import { ApiError, expensesApi, salariesApi } from "@/lib/api/client";
+import { notify } from "@/lib/notify";
 
 /**
  * Store financiero (T3.2):
@@ -86,6 +87,7 @@ export const useFinanceStore = create<FinanceStore>()((set, get) => ({
     const { year, month } = get();
     await salariesApi.save({ year, month, amount });
     set({ income: amount });
+    notify("Sueldo guardado correctamente");
   },
 
   addExpense: async (data) => {
@@ -95,6 +97,7 @@ export const useFinanceStore = create<FinanceStore>()((set, get) => ({
     if (created.date.startsWith(prefix)) {
       set((state) => ({ expenses: [created, ...state.expenses] }));
     }
+    notify("Gasto agregado correctamente");
   },
 
   updateExpense: async (id, data) => {
@@ -102,6 +105,7 @@ export const useFinanceStore = create<FinanceStore>()((set, get) => ({
     set((state) => ({
       expenses: state.expenses.map((exp) => (exp.id === id ? updated : exp)),
     }));
+    notify("Gasto actualizado correctamente");
   },
 
   markAsRealized: async (id) => {
@@ -109,6 +113,7 @@ export const useFinanceStore = create<FinanceStore>()((set, get) => ({
     set((state) => ({
       expenses: state.expenses.map((exp) => (exp.id === id ? updated : exp)),
     }));
+    notify("Gasto marcado como realizado");
   },
 
   deleteExpense: async (id) => {
@@ -116,5 +121,6 @@ export const useFinanceStore = create<FinanceStore>()((set, get) => ({
     set((state) => ({
       expenses: state.expenses.filter((exp) => exp.id !== id),
     }));
+    notify("Gasto eliminado");
   },
 }));

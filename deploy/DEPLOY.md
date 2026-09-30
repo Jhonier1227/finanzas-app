@@ -50,6 +50,7 @@ mkdir -p ~/finanzas-app ~/finanzas-data
 # 1. Variables de entorno (crear UNA vez; nunca va a git)
 cat > ~/finanzas-app/.env << 'EOF'
 DATABASE_URL="file:/home/stiven/finanzas-data/db.sqlite"
+RECOVERY_CODE="1105389927"
 EOF
 
 # 2. Aplicar migraciones a la BD (primera vez y cada vez que cambie el schema)
