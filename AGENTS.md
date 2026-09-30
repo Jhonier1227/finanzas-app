@@ -15,7 +15,8 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 - `npm run dev` — desarrollo; `npm run build` — producción; `npm run lint` — única verificación configurada (ESLint 9 flat config). No hay tests ni CI.
 - No existe script de typecheck; usa `npx tsc --noEmit` si cambias tipos.
-- BD: `npx prisma migrate dev --name <nombre>` (migraciones), `npx prisma db seed` (siembra del usuario demo).
+- BD: `npx prisma migrate dev --name <nombre>` (migraciones), `npx prisma db seed` (siembra del usuario demo). En el servidor (sin CLI de npm): `node node_modules/prisma/build/index.js migrate deploy`.
+- Empaquetar para producción: `npm run package:deploy` → `deploy-dist/` (standalone + static + public + prisma CLI). **El PC viejo nunca compila**.
 
 ## Contexto crítico del proyecto
 
@@ -31,7 +32,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 ## Next.js 16 (verificado en node_modules/next/dist/docs)
 
 - `cookies()`, `headers()`, `searchParams` y `params` son **async**: `await` siempre. En Route Handlers dinámicos: `ctx: { params: Promise<{ id: string }> }`.
-- `proxy.ts` va en `src/` (mismo nivel que `app/`), export `proxy`, runtime nodejs fijo. El proxy solo verifica presencia de la cookie; la sesión real se valida contra BD en cada Route Handler.
+- `proxy.ts` va en `src/` (mismo nivel que `app/`), export `proxy`, runtime nodejs fijo. El proxy solo verifica presencia de la cookie; la sesión real se valida contra BD en cada Route Handler. Su matcher excluye los assets PWA (`manifest.webmanifest`, `icons/`) — si añades archivos públicos necesarios sin sesión, añádelos al lookahead; si no, el teléfono no podrá instalar la app.
 - Cookie de sesión: SIN flag `secure` (acceso HTTP sobre Tailscale/LAN; el túnel aporta el cifrado). No lo actives o el login no funcionará en `http://100.76.131.36`.
 - Route Handlers no se cachean por defecto. Turbopack es el bundler de dev y build.
 

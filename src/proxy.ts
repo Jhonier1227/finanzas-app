@@ -38,6 +38,10 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Todo excepto assets internos/estáticos; incluye /api/*
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  // Todo excepto assets internos/estáticos y los archivos PWA
+  // (manifest + iconos deben servirse sin sesión para que el
+  // teléfono pueda instalar la app); incluye /api/*
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|icons).*)",
+  ],
 };

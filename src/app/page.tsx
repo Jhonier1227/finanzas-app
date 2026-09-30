@@ -4,18 +4,21 @@ import { useEffect, useState } from "react";
 import { IncomeForm } from "@/components/income-form";
 import { Dashboard } from "@/components/dashboard";
 import { ExpenseList } from "@/components/expense-list";
+import { Historial } from "@/components/historial";
+import { MonthSelector } from "@/components/month-selector";
 import { DarkModeToggle } from "@/components/dark-mode-toggle";
 import { ImportLocalData } from "@/components/import-local-data";
 import { useFinanceStore } from "@/store/finance-store";
 import { formatCurrency } from "@/lib/utils";
 import {
+  History,
   LayoutDashboard,
   ListFilter,
   LogOut,
   Wallet,
 } from "lucide-react";
 
-type Tab = "dashboard" | "gastos";
+type Tab = "dashboard" | "gastos" | "historial";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
@@ -38,55 +41,66 @@ export default function Home() {
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
       {/* Header */}
       <header className="sticky top-0 z-30 border-b border-zinc-200 bg-white/80 backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-900/80">
-        <div className="mx-auto max-w-6xl px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-emerald-100 p-1.5 dark:bg-emerald-900/30">
+        <div className="mx-auto max-w-6xl px-2 sm:px-4 py-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <div className="rounded-lg bg-emerald-100 p-1.5 dark:bg-emerald-900/30 shrink-0">
                 <Wallet className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
               </div>
-              <div>
-                <h1 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
+              <div className="min-w-0">
+                <h1 className="text-base sm:text-lg font-bold text-zinc-900 dark:text-zinc-100 truncate">
                   Finanzas App
                 </h1>
                 {income > 0 && (
-                  <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                  <p className="hidden sm:block text-xs font-medium text-emerald-600 dark:text-emerald-400">
                     {formatCurrency(income)} / mes
                   </p>
                 )}
               </div>
             </div>
 
-            {/* Navigation */}
-            <nav className="flex items-center gap-1">
+            {/* Navigation — en móvil solo iconos, texto desde sm (RF-27) */}
+            <nav className="flex items-center gap-0.5 sm:gap-1 shrink-0">
               <button
                 onClick={() => setActiveTab("dashboard")}
-                className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors cursor-pointer ${
+                className={`flex items-center gap-2 rounded-lg px-2.5 sm:px-4 py-2 text-sm font-medium transition-colors cursor-pointer ${
                   activeTab === "dashboard"
                     ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
                     : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
                 }`}
               >
                 <LayoutDashboard className="h-4 w-4" />
-                Dashboard
+                <span className="hidden sm:inline">Dashboard</span>
               </button>
               <button
                 onClick={() => setActiveTab("gastos")}
-                className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors cursor-pointer ${
+                className={`flex items-center gap-2 rounded-lg px-2.5 sm:px-4 py-2 text-sm font-medium transition-colors cursor-pointer ${
                   activeTab === "gastos"
                     ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
                     : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
                 }`}
               >
                 <ListFilter className="h-4 w-4" />
-                Gastos
+                <span className="hidden sm:inline">Gastos</span>
               </button>
-              <div className="ml-2 border-l border-zinc-200 pl-2 dark:border-zinc-700">
+              <button
+                onClick={() => setActiveTab("historial")}
+                className={`flex items-center gap-2 rounded-lg px-2.5 sm:px-4 py-2 text-sm font-medium transition-colors cursor-pointer ${
+                  activeTab === "historial"
+                    ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                    : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                }`}
+              >
+                <History className="h-4 w-4" />
+                <span className="hidden sm:inline">Historial</span>
+              </button>
+              <div className="ml-1 sm:ml-2 border-l border-zinc-200 pl-1 sm:pl-2 dark:border-zinc-700">
                 <DarkModeToggle />
               </div>
               <button
                 onClick={handleLogout}
                 title="Cerrar sesión"
-                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 transition-colors cursor-pointer dark:text-zinc-400 dark:hover:bg-zinc-800"
+                className="flex items-center gap-2 rounded-lg px-2 sm:px-3 py-2 text-sm font-medium text-zinc-600 hover:bg-zinc-100 transition-colors cursor-pointer dark:text-zinc-400 dark:hover:bg-zinc-800"
               >
                 <LogOut className="h-4 w-4" />
               </button>
@@ -119,13 +133,29 @@ export default function Home() {
           </div>
         ) : (
           <>
-            {/* Income */}
-            <div className="max-w-md">
-              <IncomeForm />
-            </div>
+            {/* Selector de mes (RF-15) — no aplica a la pestaña Historial,
+                que tiene su propio selector de año */}
+            {activeTab !== "historial" && (
+              <div className="flex justify-center sm:justify-start">
+                <MonthSelector />
+              </div>
+            )}
+
+            {/* Income: solo en meses con dashboard/gastos */}
+            {activeTab !== "historial" && (
+              <div className="max-w-md">
+                <IncomeForm />
+              </div>
+            )}
 
             {/* Content based on active tab */}
-            {activeTab === "dashboard" ? <Dashboard /> : <ExpenseList />}
+            {activeTab === "dashboard" ? (
+              <Dashboard />
+            ) : activeTab === "gastos" ? (
+              <ExpenseList />
+            ) : (
+              <Historial />
+            )}
           </>
         )}
       </main>

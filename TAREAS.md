@@ -58,42 +58,43 @@
 - [x] T3.6 Eliminar persistencia en localStorage del store financiero (dejar solo la del tema)
 - [x] T3.7 Verificación de fase: importar datos reales, verificar totales contra la versión anterior
 
-## Fase 4 — Vistas por mes y comparativas
+## Fase 4 — Vistas por mes y comparativas ✅ (2026-09-26)
 
 > Objetivo: historial mensual completo (la funcionalidad estrella).
 
-- [ ] T4.1 Selector de mes global (`MonthSelector`: ◀ Octubre 2026 ▶) en la cabecera — *RF-15/16*
-- [ ] T4.2 `income-form` → formulario de sueldo mensual (sugerir último registrado) — *RF-05..08*
-- [ ] T4.3 Dashboard y lista filtrados por mes seleccionado — *RF-13, RF-17..20*
-- [ ] T4.4 Vista "Historial": gráfico ingreso vs gastado por mes del año — *RF-21*
-- [ ] T4.5 Vista "Historial": tabla anual (sueldo, gastado, comprometido, ahorro) — *RF-22*
-- [ ] T4.6 Acción rápida: gasto planificado → realizado desde la lista — *RF-14*
-- [ ] T4.7 Verificación de fase: datos de 3 meses distintos, comparativas correctas contra cálculo manual
+- [x] T4.1 Selector de mes global (`MonthSelector`: ◀ Octubre 2026 ▶) en la cabecera — *RF-15/16*
+- [x] T4.2 `income-form` → formulario de sueldo mensual (sugerir último registrado) — *RF-05..08*
+- [x] T4.3 Dashboard y lista filtrados por mes seleccionado — *RF-13, RF-17..20*
+- [x] T4.4 Vista "Historial": gráfico ingreso vs gastado por mes del año — *RF-21*
+- [x] T4.5 Vista "Historial": tabla anual (sueldo, gastado, comprometido, ahorro) — *RF-22*
+- [x] T4.6 Acción rápida: gasto planificado → realizado desde la lista — *RF-14*
+- [x] T4.7 Verificación de fase: datos de 3 meses distintos, comparativas correctas contra cálculo manual
 
-## Fase 5 — PWA y pulido móvil
+## Fase 5 — PWA y pulido móvil ✅ (2026-09-26)
 
 > Objetivo: instalar en el teléfono y registrar gastos cómodamente.
 
-- [ ] T5.1 Revisar soporte PWA en Next 16 (`manifest.ts` de App Router vs archivo estático) — *RNF-17*
-- [ ] T5.2 `manifest` + iconos (192/512, maskable) + metadatos de instalación — *RF-26, RNF-20*
-- [ ] T5.3 Auditoría responsive a 360px: navbar, formularios, lista, gráficos (Recharts) — *RF-27*
-- [ ] T5.4 Cola de botones grandes y táctiles para registro rápido de gasto en móvil
-- [ ] T5.5 Verificación de fase: instalar en el teléfono desde Tailscale y probar flujo completo
+- [x] T5.1 Revisar soporte PWA en Next 16 (`manifest.ts` de App Router vs archivo estático) — *RNF-17*
+- [x] T5.2 `manifest` + iconos (192/512, maskable) + metadatos de instalación — *RF-26, RNF-20*
+- [x] T5.3 Auditoría responsive a 360px: navbar, formularios, lista, gráficos (Recharts) — *RF-27*
+- [x] T5.4 Cola de botones grandes y táctiles para registro rápido de gasto en móvil
+- [x] T5.5 Verificación de fase: manifest e iconos servidos sin sesión (200), build limpio. *Instalación en el teléfono pendiente de Fase 6 (requiere el servidor).*
 
-## Fase 6 — Despliegue en el PC viejo (Debian 13, 1.5 GB RAM)
+## Fase 6 — Despliegue en el PC viejo (Debian 13, 1.5 GB RAM) ◐ Preparación hecha; ejecución pendiente (tú, en el servidor)
 
 > Objetivo: producción casera, siempre disponible. **Restricción dura: NUNCA compilar en este equipo.**
+> 📄 **Guía paso a paso completa: `deploy/DEPLOY.md`** (con comandos exactos para copiar/pegar)
 
-- [ ] T6.1 Preparar el PC viejo según docs/ENTORNOS.md §3: modo texto (sin GUI), zram, Node.js 22 (NodeSource), Tailscale sin expiración de clave
-- [ ] T6.2 `output: "standalone"` en next.config; build **en el PC personal** y copia por scp — *RNF-10/11*
-- [ ] T6.3 `npx prisma migrate deploy` en el servidor (crea `db.sqlite`)
-- [ ] T6.4 Servicio systemd `finanzas.service` (plantilla en ENTORNOS.md §5.1: `NODE_OPTIONS=--max-old-space-size=512`, `MemoryMax=700M`, `Restart=always`) — *RNF-12*
-- [ ] T6.5 ufw: permitir 3000 solo desde LAN (`192.168.1.0/24`) y `tailscale0` — *RNF-04*
-- [ ] T6.6 Energía portátil: `HandleLidSwitch=ignore` en logind.conf (cerrar tapa ≠ apagar servidor)
-- [ ] T6.7 Pruebas: acceso desde PC principal (LAN), teléfono en casa (LAN) y fuera (Tailscale) — *RNF-13*
-- [ ] T6.8 Script de backup semanal de `db.sqlite` (cron → copia al PC personal) — *RNF-07*
-- [ ] T6.9 Monitoreo de RAM: `htop`/`journalctl` tras una semana; si el uso sostenido > 85%, considerar ampliar a 4-8 GB DDR3 (slot libre del Samsung 300E)
-- [ ] T6.10 Verificación de fase: registrar gasto en la calle con datos móviles, verlo en el PC al llegar
+- [ ] T6.1 Preparar el PC viejo según docs/ENTORNOS.md §3 y deploy/DEPLOY.md §A: modo texto (sin GUI), zram, Node.js 22 (NodeSource), Tailscale sin expiración de clave — **pendiente (se hace en el servidor)**
+- [x] T6.2 `output: "standalone"` en next.config; build **en el PC personal** + script `npm run package:deploy` que genera `deploy-dist/` (standalone + static + public + prisma CLI). **Verificado en vivo: migrate deploy y servidor standalone funcionando (registro vía API 201 contra BD del paquete)** — *RNF-10/11*
+- [ ] T6.3 `node node_modules/prisma/build/index.js migrate deploy` en el servidor — **pendiente (DEPLOY.md §B.2)**
+- [ ] T6.4 Servicio systemd: archivo listo en `deploy/finanzas.service` (NODE_OPTIONS=512MB, MemoryMax=700M, Restart=always) — **pendiente instalarlo (DEPLOY.md §B.3)** — *RNF-12*
+- [ ] T6.5 ufw: permitir 3000 solo desde LAN (`192.168.1.0/24`) y `tailscale0` — **pendiente (DEPLOY.md §B.4)** — *RNF-04*
+- [ ] T6.6 Energía portátil: `HandleLidSwitch=ignore` en logind.conf — **pendiente (DEPLOY.md §A.4)**
+- [ ] T6.7 Pruebas de acceso: PC (LAN), teléfono en casa (LAN) y fuera (Tailscale) + instalar PWA — **pendiente (DEPLOY.md §C)** — *RNF-13*
+- [ ] T6.8 Script de backup `deploy/backup-db.sh` listo; activar cron semanal — **pendiente (DEPLOY.md §D)** — *RNF-07*
+- [ ] T6.9 Monitoreo de RAM tras una semana (DEPLOY.md §F) — **pendiente**
+- [ ] T6.10 Verificación final: gasto desde la calle (datos móviles) visible en el PC al llegar — **pendiente**
 
 ## Fase 7 — Futuro (backlog, sin fecha)
 

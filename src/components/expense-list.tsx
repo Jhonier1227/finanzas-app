@@ -7,7 +7,7 @@ import { EXPENSE_CATEGORIES } from "@/types";
 import { Select } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { Pencil, Trash2, Search, Plus } from "lucide-react";
+import { Pencil, Trash2, Search, Plus, Check } from "lucide-react";
 import { ExpenseForm } from "./expense-form";
 import {
   AlertDialog,
@@ -23,6 +23,7 @@ import {
 export function ExpenseList() {
   const expenses = useFinanceStore((s) => s.expenses);
   const deleteExpense = useFinanceStore((s) => s.deleteExpense);
+  const markAsRealized = useFinanceStore((s) => s.markAsRealized);
 
   const [search, setSearch] = useState("");
   const [filterCategory, setFilterCategory] = useState<string>("");
@@ -80,12 +81,13 @@ export function ExpenseList() {
         <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
           Gastos Registrados
         </h2>
+        {/* T5.4: objetivo táctil ≥44px en móvil, ancho completo */}
         <Button
           onClick={() => {
             setEditingExpense(null);
             setFormOpen(true);
           }}
-          size="sm"
+          className="w-full sm:w-auto min-h-[44px]"
         >
           <Plus className="h-4 w-4" />
           Nuevo Gasto
@@ -243,16 +245,26 @@ export function ExpenseList() {
                     </td>
                     <td className="py-3 px-4 text-right">
                       <div className="flex items-center justify-end gap-1">
+                        {/* Acción rápida RF-14: planificado → realizado */}
+                        {expense.type === "planificado" && (
+                          <button
+                            onClick={() => void markAsRealized(expense.id)}
+                            className="rounded-lg p-2 min-h-[36px] min-w-[36px] inline-flex items-center justify-center text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/30 transition-colors cursor-pointer"
+                            title="Marcar como realizado"
+                          >
+                            <Check className="h-4 w-4" />
+                          </button>
+                        )}
                         <button
                           onClick={() => openEdit(expense)}
-                          className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+                          className="rounded-lg p-2 min-h-[36px] min-w-[36px] inline-flex items-center justify-center text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
                           title="Editar"
                         >
                           <Pencil className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => setDeleteTarget(expense)}
-                          className="rounded-lg p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors cursor-pointer"
+                          className="rounded-lg p-2 min-h-[36px] min-w-[36px] inline-flex items-center justify-center text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors cursor-pointer"
                           title="Eliminar"
                         >
                           <Trash2 className="h-4 w-4" />

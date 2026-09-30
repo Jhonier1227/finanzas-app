@@ -97,33 +97,10 @@ PC PERSONAL (Windows):                   PC VIEJO (Debian):
 
 ### 5.1 Servicio systemd (arranque automático en el servidor)
 
-`/etc/systemd/system/finanzas.service`:
-
-```ini
-[Unit]
-Description=Finanzas App (Next.js standalone)
-After=network-online.target tailscaled.service
-Wants=network-online.target
-
-[Service]
-Type=simple
-User=stiven
-WorkingDirectory=/home/stiven/finanzas-app
-Environment=NODE_ENV=production
-Environment=NODE_OPTIONS=--max-old-space-size=512
-Environment=HOSTNAME=0.0.0.0
-Environment=PORT=3000
-ExecStart=/usr/bin/node server.js
-Restart=always
-RestartSec=5
-MemoryMax=700M
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Activación: `sudo systemctl enable --now finanzas`
-Logs: `journalctl -u finanzas -f`
+La unidad vive versionada en el repo: **`deploy/finanzas.service`**
+(ExecStart = `node server.js` standalone, `NODE_OPTIONS=--max-old-space-size=512`,
+`MemoryMax=700M`, `Restart=always`). El procedimiento completo paso a paso
+está en **`deploy/DEPLOY.md`**. Logs: `journalctl -u finanzas -f`.
 
 ## 6. Datos: qué vive en dónde
 

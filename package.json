@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "package:deploy": "npm run build && node scripts/package-deploy.mjs"
   },
   "prisma": {
     "seed": "node prisma/seed.mjs"

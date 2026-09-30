@@ -12,12 +12,14 @@ import { formatCurrency } from "@/lib/utils";
 
 export function IncomeForm() {
   const income = useFinanceStore((s) => s.income);
+  const suggestedIncome = useFinanceStore((s) => s.suggestedIncome);
   const setIncome = useFinanceStore((s) => s.setIncome);
   const [editing, setEditing] = useState(false);
 
   const form = useForm<IncomeFormData>({
     resolver: zodResolver(incomeSchema) as any, // eslint-disable-line @typescript-eslint/no-explicit-any -- incompatibilidad conocida de tipos RHF + Zod 4 (ver AGENTS.md)
-    defaultValues: { income: income || undefined },
+    // RF-08: si el mes no tiene sueldo, sugerir el último registrado.
+    defaultValues: { income: income || suggestedIncome || undefined },
   });
 
   const onSubmit = async (data: IncomeFormData) => {

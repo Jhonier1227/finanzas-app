@@ -26,7 +26,20 @@ interface ExpenseFormProps {
 export function ExpenseForm({ open, onOpenChange, expense }: ExpenseFormProps) {
   const addExpense = useFinanceStore((s) => s.addExpense);
   const updateExpense = useFinanceStore((s) => s.updateExpense);
+  const ctxYear = useFinanceStore((s) => s.year);
+  const ctxMonth = useFinanceStore((s) => s.month);
   const isEditing = !!expense;
+
+  // Fecha por defecto: hoy si el contexto es el mes actual; si navegaste a
+  // otro mes, el día 1 de ese mes (evita gastos "invisibles" en la lista).
+  const defaultDate = () => {
+    const now = new Date();
+    const isCurrentMonth =
+      ctxYear === now.getFullYear() && ctxMonth === now.getMonth() + 1;
+    return isCurrentMonth
+      ? now.toISOString().slice(0, 10)
+      : `${ctxYear}-${String(ctxMonth).padStart(2, "0")}-01`;
+  };
 
   const form = useForm<ExpenseFormData>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- incompatibilidad conocida de tipos RHF + Zod 4 (ver AGENTS.md)
@@ -37,7 +50,7 @@ export function ExpenseForm({ open, onOpenChange, expense }: ExpenseFormProps) {
       description: "" as unknown as ExpenseFormData["description"],
       price: undefined as unknown as ExpenseFormData["price"],
       type: undefined as unknown as ExpenseFormData["type"],
-      date: new Date().toISOString().slice(0, 10),
+      date: defaultDate(),
     },
   });
 
@@ -62,10 +75,10 @@ export function ExpenseForm({ open, onOpenChange, expense }: ExpenseFormProps) {
         price: undefined as any,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any -- placeholder vacío para radio no elegido (ver AGENTS.md)
         type: undefined as any,
-        date: new Date().toISOString().slice(0, 10),
+        date: defaultDate(),
       } as ExpenseFormData);
     }
-  }, [expense, open, form]);
+  }, [expense, open, form]); // eslint-disable-line react-hooks/exhaustive-deps -- defaultDate deriva del contexto de mes del store
 
   const onSubmit = async (data: ExpenseFormData) => {
     if (isEditing && expense) {

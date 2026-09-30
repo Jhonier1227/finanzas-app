@@ -1,0 +1,24 @@
+# Servicio systemd para Finanzas App en el PC viejo (Debian 13).
+# Instalación: sudo cp deploy/finanzas.service /etc/systemd/system/ && sudo systemctl enable --now finanzas
+# (Ajusta User y WorkingDirectory si tu usuario o ruta son distintos)
+[Unit]
+Description=Finanzas App (Next.js standalone)
+After=network-online.target tailscaled.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=stiven
+WorkingDirectory=/home/stiven/finanzas-app
+Environment=NODE_ENV=production
+Environment=NODE_OPTIONS=--max-old-space-size=512
+Environment=HOSTNAME=0.0.0.0
+Environment=PORT=3000
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=5
+# Límite duro de memoria (servidor con 1.5 GiB RAM, RNF-10)
+MemoryMax=700M
+
+[Install]
+WantedBy=multi-user.target

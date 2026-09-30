@@ -81,6 +81,49 @@
 
 **Cierre de Fase 3** ✅ — la app ya persiste en la BD. **Siguiente paso del usuario: entrar a la app, registrarse y pulsar "Importar" para migrar sus datos reales.**
 
+### Fase 4 — Vistas por mes y comparativas (completada)
+
+> Pre-requisito confirmado: el usuario registró su cuenta real e importó sus datos (Fase 3 en producción local). La BD dev ya contiene datos reales del usuario — **los scripts de limpieza solo borran usuarios `@*.local` de prueba**.
+
+| Hora | Actividad | Detalle |
+|---|---|---|
+| 22:10 | T4.1 | `month-selector.tsx`: ◀ Septiembre 2026 ▶ (Intl es-CO, mes capitalizado), botón "Hoy" aparece al navegar lejos del mes actual. Cambia `store.setMonth` → todo reacciona |
+| 22:12 | Store extendido | `suggestedIncome` (último sueldo registrado, RF-08), `setMonth`, `markAsRealized` (RF-14). `loadMonth` ahora trae en paralelo: sueldo del mes + gastos del mes + todos los sueldos (para la sugerencia) |
+| 22:15 | T4.2 | `income-form`: si el mes no tiene sueldo, precarga el último registrado como sugerencia |
+| 22:16 | T4.3 | Dashboard y lista ya eran month-scoped por el store (Fase 3): ahora responden al MonthSelector. `expense-form`: fecha por defecto = hoy si es el mes actual, o día 1 del mes navegado (evita gastos invisibles) |
+| 22:22 | T4.4 + T4.5 | Vista **Historial** nueva (tercera pestaña, icono History): selector de año, gráfico de barras Ingreso vs Gastado por mes (12 meses, recharts), tabla anual con Sueldo/Gastado/Comprometido/Ahorro por mes + fila Total; celdas vacías como "—", ahorro negativo en rojo |
+| 22:25 | T4.6 | Botón ✔ en filas planificadas: un clic las marca como realizadas (PATCH parcial) |
+| 22:30 | Verificación | `lint` ✅ · `build` ✅ (sin rutas nuevas de API — todo agrega en cliente sobre endpoints existentes) |
+| 22:36 | T4.7 Prueba de datos | 3 meses sembrados por API (jul/ago/sep, sueldos 1.8M/2M/2.2M, gastos realizados y planificados) → totales por mes comparados contra cálculo manual: **coincidencia exacta** (ej. sep: gastado 600k, comprometido 400k, ahorro 1.6M). Datos de prueba eliminados; **datos reales del usuario intactos** (5 gastos, 2 sueldos) |
+
+**Cierre de Fase 4** ✅ — la app ya permite navegar el historial mensual y comparar el año completo.
+
+### Fase 5 — PWA y pulido móvil (completada)
+
+| Hora | Actividad | Detalle |
+|---|---|---|
+| 22:45 | T5.1 | Docs Next 16: `src/app/manifest.ts` es un Route Handler especial (`MetadataRoute.Manifest`, cacheado por defecto, genera `/manifest.webmanifest`) |
+| 22:50 | T5.2 | Iconos generados con `scripts/generate-icons.mjs` (PNG puro con Node+zlib, sin dependencias — a propósito por el servidor limitado): `icon-192/512.png` (esquinas redondeadas) + `icon-maskable-512.png` (full-bleed, zona segura 80%). Verificados visualmente: 3 barras blancas ascendentes sobre esmeralda #10b981. Manifest + `viewport.themeColor` + `appleWebApp` en layout |
+| 23:00 | **Bug evitado en verificación** | El matcher del proxy habría redirigido `/manifest.webmanifest` e `/icons/*` a `/login` sin sesión → instalación PWA rota. Matcher excluye ahora esos assets. Registrado en AGENTS.md |
+| 23:02 | T5.3 | Auditoría 360px: cabecera ahora muestra solo iconos de pestañas en móvil (texto desde `sm`), título truncable, subtítulo de ingreso oculto en xs; paddings reducidos. Tablas ya tenían `overflow-x-auto` ✅ |
+| 23:05 | T5.4 | Objetivos táctiles: "Nuevo Gasto" full-width ≥44px en móvil; botones de acción de fila (✔ editar eliminar) con hit-area 36px+ |
+| 23:06 | T5.5 Verificación | `lint` + `build` ✅ (`/manifest.webmanifest` estático registrado) · manifest servido como `application/manifest+json` sin sesión ✅ · iconos 200 PNG ✅. Pendiente por naturaleza: instalación real en teléfono (requiere Fase 6 desplegada) |
+
+**Cierre de Fase 5** ✅ — PWA lista para instalar. Resta Fase 6: despliegue en el PC viejo.
+
+## 2026-09-27 — Fase 6: preparación del despliegue (artefactos hechos y verificados)
+
+| Hora | Actividad | Detalle |
+|---|---|---|
+| 19:10 | T6.2 Config standalone | `output: "standalone"` en `next.config.ts` (verificado en docs Next 16: crea `.next/standalone` + `server.js` minimal; `public` y `.next/static` se copian aparte). **El standalone trazó ambos motores Prisma (windows + debian-openssl-3.0.x)** gracias a los `binaryTargets` del schema — funciona en el servidor sin recompilar |
+| 19:15 | Script de empaquetado | `scripts/package-deploy.mjs` + `npm run package:deploy` → genera `deploy-dist/` (standalone + static + public + schema/migraciones + CLI de Prisma para migrar en el servidor). `deploy-dist/` añadida a .gitignore |
+| 19:20 | Prueba en vivo del paquete | Desde `deploy-dist/`: `migrate deploy` crea BD nueva ✅, `node server.js` sirve `/login` 200 ✅, manifest 200 ✅, y `POST /api/auth/register` **201 escribiendo en la BD SQLite del paquete** ✅ |
+| 19:25 | Artefactos de despliegue | `deploy/DEPLOY.md` (guía paso a paso 💻 PC personal / 🖥️ servidor: preparación Debian, scp, .env, migraciones, systemd, ufw, backups, ciclo de actualizaciones, diagnóstico) · `deploy/finanzas.service` (systemd: MemoryMax=700M, Restart=always) · `deploy/backup-db.sh` (cron semanal, conserva 8 copias) |
+| 19:31 | Bug colateral encontrado | ESLint empezó a analizar `deploy-dist/` (7.469 "errores" del bundle minificado). Solución: `deploy-dist/**` añadido a `globalIgnores` de eslint.config |
+| 19:32 | Estado de la fase | lint ✅ limpio · Todo lo preparable desde el PC personal: hecho y verificado. **Pendiente (T6.1, T6.3–T6.10): ejecutar EN el servidor** siguiendo deploy/DEPLOY.md. TAREAS.md lo refleja marcado como ◐ |
+
+**Siguiente acción (usuario):** seguir `deploy/DEPLOY.md` en el PC viejo — preparación (§A), despliegue (§B), pruebas (§C), backups (§D).
+
 ---
 
 ## Plantilla para nuevas entradas

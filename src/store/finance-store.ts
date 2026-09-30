@@ -13,21 +13,27 @@ import { ApiError, expensesApi, salariesApi } from "@/lib/api/client";
  */
 
 interface FinanceStore {
-  /** Mes/año en contexto (Fase 4: selector de mes los cambiará). */
+  /** Mes/año en contexto (lo cambia el MonthSelector — RF-15). */
   year: number;
   month: number;
   /** Sueldo del mes en contexto (0 = no registrado). */
   income: number;
+  /** Último sueldo registrado en cualquier mes (para sugerirlo — RF-08). */
+  suggestedIncome: number;
   /** Gastos del mes en contexto. */
   expenses: Expense[];
   loading: boolean;
   error: string | null;
   /** Carga sueldo + gastos de un mes. Por defecto el mes actual. */
   loadMonth: (year?: number, month?: number) => Promise<void>;
+  /** Cambia el mes en contexto y carga sus datos. */
+  setMonth: (year: number, month: number) => Promise<void>;
   setIncome: (amount: number) => Promise<void>;
   addExpense: (data: ExpenseFormData) => Promise<void>;
   updateExpense: (id: string, data: ExpenseFormData) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
+  /** Acción rápida: planificado → realizado (RF-14). */
+  markAsRealized: (id: string) => Promise<void>;
   clearError: () => void;
 }
 
@@ -37,6 +43,7 @@ export const useFinanceStore = create<FinanceStore>()((set, get) => ({
   year: now.getFullYear(),
   month: now.getMonth() + 1,
   income: 0,
+  suggestedIncome: 0,
   expenses: [],
   loading: false,
   error: null,
@@ -47,12 +54,18 @@ export const useFinanceStore = create<FinanceStore>()((set, get) => ({
     const m = month ?? get().month;
     set({ year: y, month: m, loading: true, error: null });
     try {
-      const [salaries, expenses] = await Promise.all([
+      const [salaries, expenses, allSalaries] = await Promise.all([
         salariesApi.list(y, m),
         expensesApi.list(y, m),
+        salariesApi.list(),
       ]);
+      // Sugerencia RF-08: sueldo del mes más reciente registrado.
+      const latest = [...allSalaries].sort(
+        (a, b) => b.year - a.year || b.month - a.month
+      )[0];
       set({
         income: salaries[0]?.amount ?? 0,
+        suggestedIncome: latest?.amount ?? 0,
         expenses,
         loading: false,
       });
@@ -66,6 +79,8 @@ export const useFinanceStore = create<FinanceStore>()((set, get) => ({
       });
     }
   },
+
+  setMonth: (year, month) => get().loadMonth(year, month),
 
   setIncome: async (amount) => {
     const { year, month } = get();
@@ -84,6 +99,13 @@ export const useFinanceStore = create<FinanceStore>()((set, get) => ({
 
   updateExpense: async (id, data) => {
     const updated = await expensesApi.update(id, data);
+    set((state) => ({
+      expenses: state.expenses.map((exp) => (exp.id === id ? updated : exp)),
+    }));
+  },
+
+  markAsRealized: async (id) => {
+    const updated = await expensesApi.update(id, { type: "realizado" });
     set((state) => ({
       expenses: state.expenses.map((exp) => (exp.id === id ? updated : exp)),
     }));

@@ -36,6 +36,9 @@ yarn-error.log*
 # prisma / sqlite
 prisma/dev.db*
 
+# paquete de despliegue (se regenera con npm run package:deploy)
+deploy-dist/
+
 # vercel
 .vercel
 
