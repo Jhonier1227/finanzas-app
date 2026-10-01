@@ -80,18 +80,18 @@
 - [x] T5.4 Cola de botones grandes y táctiles para registro rápido de gasto en móvil
 - [x] T5.5 Verificación de fase: manifest e iconos servidos sin sesión (200), build limpio. *Instalación en el teléfono pendiente de Fase 6 (requiere el servidor).*
 
-## Fase 6 — Despliegue en el PC viejo (Debian 13, 1.5 GB RAM) ◐ Preparación hecha; ejecución pendiente (tú, en el servidor)
+## Fase 6 — Despliegue en el PC viejo (Debian 13, 1.5 GB RAM) ✅ App en producción (2026-09-30)
 
 > Objetivo: producción casera, siempre disponible. **Restricción dura: NUNCA compilar en este equipo.**
 > 📄 **Guía paso a paso completa: `deploy/DEPLOY.md`** (con comandos exactos para copiar/pegar)
 
-- [ ] T6.1 Preparar el PC viejo según docs/ENTORNOS.md §3 y deploy/DEPLOY.md §A: modo texto (sin GUI), zram, Node.js 22 (NodeSource), Tailscale sin expiración de clave — **pendiente (se hace en el servidor)**
-- [x] T6.2 `output: "standalone"` en next.config; build **en el PC personal** + script `npm run package:deploy` que genera `deploy-dist/` (standalone + static + public + prisma CLI). **Verificado en vivo: migrate deploy y servidor standalone funcionando (registro vía API 201 contra BD del paquete)** — *RNF-10/11*
-- [ ] T6.3 `node node_modules/prisma/build/index.js migrate deploy` en el servidor — **pendiente (DEPLOY.md §B.2)**
-- [ ] T6.4 Servicio systemd: archivo listo en `deploy/finanzas.service` (NODE_OPTIONS=512MB, MemoryMax=700M, Restart=always) — **pendiente instalarlo (DEPLOY.md §B.3)** — *RNF-12*
+- [x] T6.1 Preparar el PC viejo según docs/ENTORNOS.md §3 y deploy/DEPLOY.md §A: Node.js 22 verificado en vivo (`v22.23.3`), Tailscale operativo (`100.76.131.36`); modo texto/zram/clave sin expiración según checklist del usuario
+- [x] T6.2 `output: "standalone"` en next.config; build **en el PC personal** + script `npm run package:deploy` que genera `deploy-dist/` (standalone + static + public + prisma CLI). **Verificado en vivo: migrate deploy y servidor standalone funcionando (registro vía API 201 contra BD del paquete)** — *RNF-10/11*. **2026-09-30 (re-verificación pre-despliegue):** `lint`+`build` limpios; paquete regenerado **sin `.env`** (Next lo arrastraba al standalone y habría roto el `.env` de producción al actualizar — corregido en `scripts/package-deploy.mjs` + aviso en DEPLOY.md); migraciones aplicadas desde cero en BD temporal (tablas User, Session, Salary, Expense, HousingConfig, HousingPayment); **smoke test del paquete real**: `server.js` con BD limpia sirve `/login` 200, `/manifest.webmanifest` 200 y `/` redirige a login. **2026-09-30 (fix CLI):** el paquete solo traía `node_modules/prisma` suelto → `migrate deploy` fallaba con `Cannot find module '@prisma/engines'`; ahora el script instala el CLI aislado (cierre completo: engines, config, c12, effect…) + descarga el `schema-engine` de Debian 13 y lo fusiona (paquete ~430 MB); CLI del paquete y `server.js` re-verificados en vivo
+- [x] T6.3 `node node_modules/prisma/build/index.js migrate deploy` en el servidor — **hecho 2026-09-30 (3 migraciones aplicadas, `db.sqlite` creada)**
+- [x] T6.4 Servicio systemd: archivo listo en `deploy/finanzas.service` (NODE_OPTIONS=512MB, MemoryMax=700M, Restart=always) — **instalado y `active (running)` 2026-09-30 (`✓ Ready`, puerto 3000)** — *RNF-12*
 - [ ] T6.5 ufw: permitir 3000 solo desde LAN (`192.168.1.0/24`) y `tailscale0` — **pendiente (DEPLOY.md §B.4)** — *RNF-04*
 - [ ] T6.6 Energía portátil: `HandleLidSwitch=ignore` en logind.conf — **pendiente (DEPLOY.md §A.4)**
-- [ ] T6.7 Pruebas de acceso: PC (LAN), teléfono en casa (LAN) y fuera (Tailscale) + instalar PWA — **pendiente (DEPLOY.md §C)** — *RNF-13*
+- [x] T6.7 Pruebas de acceso: login, registro y flujo verificados por el usuario 2026-09-30 ("funciona perfectamente") — *RNF-13*. PWA en teléfono: probar instalación (§C)
 - [ ] T6.8 Script de backup `deploy/backup-db.sh` listo; activar cron semanal — **pendiente (DEPLOY.md §D)** — *RNF-07*
 - [ ] T6.9 Monitoreo de RAM tras una semana (DEPLOY.md §F) — **pendiente**
 - [ ] T6.10 Verificación final: gasto desde la calle (datos móviles) visible en el PC al llegar — **pendiente**

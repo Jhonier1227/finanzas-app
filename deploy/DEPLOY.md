@@ -36,11 +36,24 @@ sudo reboot   # entra en modo texto; todo lo demás se puede hacer por SSH
 ### Desde el PC personal 💻
 
 ```powershell
-npm run package:deploy    # build standalone + empaqueta deploy-dist/
+npm run package:deploy    # build standalone + empaqueta deploy-dist/ (SIN .env: el script lo excluye a propósito)
 
-# Enviar al servidor (primera vez o actualizaciones):
+# Enviar al servidor (primera vez o actualizaciones).
+# OJO: nunca copiar un .env encima del servidor (el suyo, con la ruta de
+# producción, se crea en §B y no se toca más):
 scp -r deploy-dist/* stiven@192.168.1.42:~/finanzas-app/
 ```
+
+> ⚠️ **Lecciones del despliegue real (2026-09-30):**
+> 1. El `*` NO copia carpetas que empiezan por punto: `.next/` no viaja y sin
+>    ella `node server.js` ni arranca. Enviarla explícita:
+>    `scp -r deploy-dist/.next stiven@192.168.1.42:~/finanzas-app/`
+> 2. `deploy/` (service, este archivo, backup) NO va dentro de `deploy-dist/`:
+>    enviarla aparte la primera vez:
+>    `scp -r deploy stiven@192.168.1.42:~/finanzas-app/`
+> 3. En la primera subida, crear `mkdir -p ~/finanzas-app ~/finanzas-data`
+>    en el servidor ANTES del primer `scp` (si no, falla "No such file").
+> 4. Se puede usar el alias SSH (`MiServidorGlobal:...`) en vez de la IP.
 
 ### En el servidor 🖥️
 
@@ -55,6 +68,7 @@ EOF
 
 # 2. Aplicar migraciones a la BD (primera vez y cada vez que cambie el schema)
 cd ~/finanzas-app
+chmod +x ~/finanzas-app/node_modules/@prisma/engines/schema-engine-*   # el scp no conserva el permiso de ejecución
 node node_modules/prisma/build/index.js migrate deploy
 
 # 3. Servicio systemd

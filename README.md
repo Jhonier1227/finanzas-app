@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Finanzas App — Control de gastos personales
 
-## Getting Started
+Aplicación web personal de gestión financiera mensual, en español y en pesos
+colombianos (COP). Permite registrar el sueldo de cada mes, planificar gastos,
+llevar el registro de gastos reales, visualizar el avance con gráficos y
+comparar meses, además de llevar el acumulado de pagos hacia la vivienda propia
+(módulo Vivienda VIS). Instalable como PWA en el teléfono.
 
-First, run the development server:
+## Funcionalidades
+
+- **Sueldos por mes**: un registro por mes con sugerencia del último valor.
+- **Gastos realizado / planificado**: CRUD con 10 categorías, filtros, búsqueda
+  y acción rápida planificado → realizado.
+- **Dashboard**: ingreso, gastado, comprometido, saldo disponible, barra de
+  progreso con semáforo y gráficos por categoría (torta + barras).
+- **Historial anual**: comparativa ingreso vs gastado por mes y tabla resumen.
+- **Vivienda VIS**: valor del inmueble editable + registro libre de pagos con
+  total acumulado, saldo restante y % de avance.
+- **Perfil y cuenta**: nombre/apellido, recuperación con código de
+  verificación, eliminación de cuenta con doble confirmación.
+- **PWA**: instalable en Android/iOS, optimizada para móvil.
+- **Autenticación propia**: registro/login con sesiones en cookie `httpOnly`;
+  cada usuario solo ve sus datos.
+
+## Stack
+
+Next.js 16 (App Router) + React 19 + TypeScript · Tailwind CSS 4 + Radix UI ·
+Zustand · React Hook Form + Zod · Recharts · SQLite vía Prisma 6 · bcryptjs.
+
+## Desarrollo
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npx prisma migrate dev      # crea/actualiza la BD local (dev.db)
+npm run dev                 # http://localhost:3000
+npm run lint                # verificación (ESLint 9)
+npm run build               # build de producción
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Variables de entorno (`.env`, nunca va a git):
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+DATABASE_URL="file:./dev.db"
+RECOVERY_CODE="<código personal para recuperar la contraseña>"
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Despliegue (producción casera)
 
-## Learn More
+La app corre en un PC dedicado (Debian, SQLite local) y se accede por red
+privada Tailscale. **El servidor nunca compila**: el build se genera aquí y se
+copia.
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run package:deploy      # genera deploy-dist/ (standalone, sin .env)
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Guía paso a paso: [`deploy/DEPLOY.md`](./deploy/DEPLOY.md).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Documentación del proyecto
 
-## Deploy on Vercel
+- [`PROYECTO.md`](./PROYECTO.md) — visión, arquitectura, roadmap.
+- [`TAREAS.md`](./TAREAS.md) — tablero de tareas por fase.
+- [`docs/REQUERIMIENTOS.md`](./docs/REQUERIMIENTOS.md) — requerimientos funcionales y no funcionales.
+- [`docs/MODELO-DATOS.md`](./docs/MODELO-DATOS.md) — modelo de datos.
+- [`docs/ENTORNOS.md`](./docs/ENTORNOS.md) — entornos (desarrollo, servidor, teléfono).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Estado
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+En producción de uso personal. Ver roadmap y pendientes en
+[`PROYECTO.md`](./PROYECTO.md) y [`TAREAS.md`](./TAREAS.md).

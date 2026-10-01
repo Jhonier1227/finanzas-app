@@ -294,7 +294,7 @@ envía los gastos/ingreso a la API para guardarlos en la BD del usuario.
 | 3 | Frontend conectado a la API + importación de localStorage | ✅ Hecho (2026-09-26) |
 | 4 | Sueldos por mes, selector de mes, comparativas mensuales/anuales | ✅ Hecho (2026-09-26) |
 | 5 | PWA (manifest, iconos, pulido responsive) | ✅ Hecho (2026-09-26) — instalación en teléfono pendiente del despliegue |
-| 6 | Despliegue en PC viejo (arranque automático, acceso por Tailscale) | ◐ Artefactos listos y verificados (2026-09-26): `deploy/DEPLOY.md`, `package:deploy`, `finanzas.service`, `backup-db.sh`. Pendiente ejecutar EN el servidor |
+| 6 | Despliegue en PC viejo (arranque automático, acceso por Tailscale) | ✅ En producción (2026-09-30): BD migrada, servicio systemd `active (running)`, app verificada por el usuario. Restan ufw, backup cron y monitoreo RAM |
 | 8 | Módulo Vivienda VIS (valor del inmueble + pagos libres acumulados, pestaña aparte) | ✅ Hecho (2026-09-30) |
 
 ## 13. Notas operativas
